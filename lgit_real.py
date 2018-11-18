@@ -5,9 +5,11 @@ import hashlib
 import shutil
 import datetime
 
+
 def get_argument():
     parser = argparse.ArgumentParser()
-    parser.add_argument('command', nargs='+', help='init/add/commit/snapshots/index/config/status')
+    parser.add_argument('command', nargs='+', help='init/add/commit/snapshots/\
+                        index/config/status')
     parser.add_argument('--author', action='store')
     parser.add_argument('-m', action='store')
     args = parser.parse_args()
@@ -62,6 +64,7 @@ def main():
         print_ls_files()
 
 
+# -------------------------------LGIT LS-FILES---------------------------------
 def print_ls_files():
     list_file = []
     list_result = []
@@ -94,6 +97,7 @@ def check_directory(path):
         path_dir = os.path.dirname(path_dir)
 
 
+# -------------------------------LGIT RM-------------------------------------
 def remove_file(filename):
     path_list = filename
     basename = os.path.basename(filename)
@@ -101,8 +105,28 @@ def remove_file(filename):
         os.remove(filename)
 
 
+def remove_index(filename):  # find pathname_deleted in index and rm file # (2)
+    path = os.getcwd()
+    update_index = []
+    flag = 0
+    with open(path + "/.lgit/index", "r") as f_index:
+        lines = f_index.readlines()
+    print(lines)
+    for line in lines:
+        path = (line.split(' ')[-1]).strip()
+        if filename == path:
+            flag = 1
+        if filename != path:
+            update_index.append(line.strip())
+            print(update_index)
+    if flag == 0:
+        return flag  # if not have turn 0
+    else:
+        return update_index  # if have turn list are deleted file index
+
+
 def write_index_content(content):
-    with open(os.getcwd() + '/.lgit/index','r+') as file:
+    with open(os.getcwd() + '/.lgit/index', 'r+') as file:
         lines = file.readlines()
     for line_content in content:
         path_name = line_content.split(' ')[-1]
@@ -118,6 +142,7 @@ def write_index_content(content):
     write_index('\n'.join(lines) + '\n')
 
 
+# -------------------------------LGIT COMMIT----------------------------------
 def lgit_commit(mess, author):
     check = 0
     with open(os.getcwd() + '/.lgit/index', 'r+') as file:
@@ -151,41 +176,21 @@ def lgit_commit(mess, author):
         print('nothing to commit, working directory clean')
 
 
-def remove_index(filename): # find pathname_deleted in index and rm file # (2)
-    path = os.getcwd()
-    update_index = []
-    flag = 0
-    with open(path + "/.lgit/index", "r") as f_index:
-        lines = f_index.readlines()
-    print(lines)
-    for line in lines:
-        path = (line.split(' ')[-1]).strip()
-        if filename == path:
-            flag = 1
-        if filename != path:
-            update_index.append(line.strip())
-            print(update_index)
-    if flag == 0:
-        return flag  # if not have turn 0
-    else:
-        return update_index  # if have turn list are deleted file index
-
-
+# -------------------------------LGIT CONFIG--AUTHOR---------------------------
 def config(author):
     file = os.getcwd() + '/.lgit/config'
     with open(file, 'w+') as f:
         f.write(author + '\n')
 
 
-def write_index(content):  #write file index # (1)
+def write_index(content):  # write file index # (1)
     path = os.getcwd()
     with open(path + "/.lgit/index", 'w') as f_index:
         f_index.write(content)
     f_index.close()
 
 
-
-#-------------------------------LGIT ADD----------------------------------
+# -------------------------------LGIT ADD----------------------------------
 def lgit_add(file_name):
     # split ./ from the start of file
     list_index = []
@@ -212,11 +217,11 @@ def directory_tree_list(path):
 
 def create_file_objects(filename):
     path = os.getcwd()
-    file_content = open(filename,'r+').read()
-    path_objects = path +'/.lgit/objects'
+    file_content = open(filename, 'r+').read()
+    path_objects = path + '/.lgit/objects'
     hash_sha1 = caculate_sha1_file(filename)
     file_name = hash_sha1[2:]
-    dir_name =  hash_sha1[:2]
+    dir_name = hash_sha1[:2]
     if not os.path.exists(path_objects + "/" + dir_name):
         os.mkdir(path_objects + "/" + dir_name)
     file = open(path_objects + "/" + dir_name + "/" + file_name, 'w+')
@@ -249,7 +254,7 @@ def create_structure_index(filename, hash1, hash2):
     file_index.append(timestamp)
     file_index.append(hash1)
     file_index.append(hash2)
-    #SHA1 of the file content after commited
+    # SHA1 of the file content after commited
     file_index.append(' ' * 40)
     if filename[:2] == './':
         file_index.append(filename[2:])
@@ -274,7 +279,7 @@ def get_timestamp(filename):
     return(''.join(timestamp))
 
 
-#--------------------------------INIT---------------------------------
+# --------------------------------INIT---------------------------------
 def create_dir():
     path = os.getcwd() + '/.lgit'
     if os.path.exists(path):
@@ -286,13 +291,14 @@ def create_dir():
     os.mkdir(path + '/commits')
     os.mkdir(path + '/objects')
     os.mkdir(path + '/snapshots')
-    filename_index = os.path.join(path,'index')
+    filename_index = os.path.join(path, 'index')
     file = open(filename_index, 'w+')
     file.close()
-    filename_config = os.path.join(path,'config')
+    filename_config = os.path.join(path, 'config')
     file = open(filename_config, 'w+')
     file.write(os.environ['LOGNAME'])
     file.close()
+
 
 if __name__ == '__main__':
     main()
